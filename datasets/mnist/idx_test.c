@@ -25,40 +25,44 @@
 int tests_run = 0;
 FILE *testFile;
 
-void setup() {
-	testFile = openIDXFile("/home/ryan/.local/mnist/train-images-idx3-ubyte");
+void setup()
+{
+	testFile = open_IDX_file("/home/ryan/.local/mnist/train-images-idx3-ubyte");
 	if (testFile == NULL) mu_fail("Unable to open test file");
 }
 
-void teardown() {
+void teardown()
+{
 	fclose(testFile);
 }
 
 // Tests concerning the first few bytes in an IDX file, describing the data
-MU_TEST(Metadata) {
-	mu_assert_int_eq(2051, getMagicNumber(testFile));
-	mu_assert_int_eq(8, getDataType(testFile));
-	mu_assert_int_eq(3, getNumDimensions(testFile));
-	mu_assert_int_eq(60000, getDimension(testFile, 0));
-	mu_assert_int_eq(28, getDimension(testFile, 1));
-	mu_assert_int_eq(28, getDimension(testFile, 2));
+MU_TEST(Metadata)
+{
+	mu_assert_int_eq(2051, get_magic_number(testFile));
+	mu_assert_int_eq(8, get_data_type(testFile));
+	mu_assert_int_eq(3, get_num_dimensions(testFile));
+	mu_assert_int_eq(60000, get_dimension(testFile, 0));
+	mu_assert_int_eq(28, get_dimension(testFile, 1));
+	mu_assert_int_eq(28, get_dimension(testFile, 2));
 }
 
 // Tests about extracting content from IDX files
-MU_TEST(Content) {
+MU_TEST(Content)
+{
 	// First non-zero pixel of the first image
-	char *sample = (char*) getSampleAt(testFile, 0);
+	char *sample = (char*) get_sample_at(testFile, 0);
 	if( sample == NULL ) mu_fail("Returned data was empty.");
 	mu_assert_int_eq(3, sample[152]);
 	free(sample);
 
 	// First non-zero pixel of the 5306th image
-	sample = (char*) getSampleAt(testFile, 5305);
+	sample = (char*) get_sample_at(testFile, 5305);
 	if( sample == NULL ) mu_fail("Returned data was empty.");
 	mu_assert_int_eq(52, sample[160]);
 	free(sample);
 
-	sample = (char*) getAllSamples(testFile);
+	sample = (char*) get_all_samples(testFile);
 	if( sample == NULL ) mu_fail("Returned data was empty.");
 	// First non-zero pixel of the first image
 	mu_assert_int_eq(3, sample[152]);
@@ -69,13 +73,15 @@ MU_TEST(Content) {
 	// TODO: Do non-char value
 }
 
-MU_TEST_SUITE(IDX) {
+MU_TEST_SUITE(IDX)
+{
 	MU_SUITE_CONFIGURE(setup, teardown);
 	MU_RUN_TEST(Metadata);
 	MU_RUN_TEST(Content);
 }
 
-int main() {
+int main()
+{
 	MU_RUN_SUITE(IDX);
 	MU_REPORT();
 

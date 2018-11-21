@@ -25,13 +25,15 @@
 #include <stdlib.h>
 
 // IDX files are big-endian, this flips any short
-unsigned short shortFlip(unsigned short input) {
+unsigned short short_flip(unsigned short input)
+{
 	input = (((input & 0xff00) >> 8) | ((input & 0x00ff) << 8));
 	return input;
 }
 
 // IDX files are big-endian, this flips any int
-unsigned int intFlip(unsigned int input) {
+unsigned int int_flip(unsigned int input)
+{
 //	printf("Input: 0x%x\n", input);
 	input = (((input & 0xff00ff00) >> 8) | ((input & 0x00ff00ff) << 8));
 	input = (((input & 0xffff0000) >> 16) | ((input & 0x0000ffff) << 16));
@@ -39,7 +41,8 @@ unsigned int intFlip(unsigned int input) {
 	return input;
 }
 
-FILE *openIDXFile(char *fileName) {
+FILE *open_IDX_file(char *fileName)
+{
 	FILE *result = fopen(fileName, "rb");
 	if(result == NULL) {
 		printf("Couldn't open file! %s\n", fileName);
@@ -51,8 +54,9 @@ FILE *openIDXFile(char *fileName) {
 
 // The magic number contains 4 bytes. The first 2 are always 0, the third
 // encodes the data type, the fourth is the number of dimensions.
-// getMagicNumber(FILE*) gets all of these bytes as an int
-unsigned int getMagicNumber(FILE *idxFile) {
+// get_magic_number(FILE*) gets all of these bytes as an int
+unsigned int get_magic_number(FILE *idxFile)
+{
 	unsigned int result;
 	if(1 != fread(&result, sizeof(unsigned int), 1, idxFile)) {
 		printf("Could not read the file\n");
@@ -60,13 +64,14 @@ unsigned int getMagicNumber(FILE *idxFile) {
 		return 0;
 	}
 
-	return intFlip(result);
+	return int_flip(result);
 }
 
 // The magic number contains 4 bytes. The first 2 are always 0, the third
 // encodes the data type, the fourth is the number of dimensions.
-// getDataType(FILE*) gets the third byte from this number
-unsigned char getDataType(FILE *idxFile) {
+// get_data_type(FILE*) gets the third byte from this number
+unsigned char get_data_type(FILE *idxFile)
+{
 	if(fseek(idxFile, 2, SEEK_SET) != 0) {
 		printf("Train file has become unoperable.\n");
 		return 0;
@@ -83,8 +88,9 @@ unsigned char getDataType(FILE *idxFile) {
 
 // The magic number contains 4 bytes. The first 2 are always 0, the third
 // encodes the data type, the fourth is the number of dimensions.
-// getNumDimensions(FILE*) gets the fourth byte from this number
-unsigned char getNumDimensions(FILE *idxFile) {
+// get_num_dimensions(FILE*) gets the fourth byte from this number
+unsigned char get_num_dimensions(FILE *idxFile)
+{
 	if(fseek(idxFile, 3, SEEK_SET) != 0) {
 		printf("Train file has become unoperable.\n");
 		return 0;
@@ -101,7 +107,8 @@ unsigned char getNumDimensions(FILE *idxFile) {
 
 // After the magic number, there are a number of int's which tell the
 // dimensions of the following data, including the number of samples
-unsigned int getDimension(FILE *idxFile, unsigned int index) {
+unsigned int get_dimension(FILE *idxFile, unsigned int index)
+{
 	if(fseek(idxFile, 4 + index * 4, SEEK_SET) != 0) {
 		printf("Train file has become unoperable.\n");
 		return 0;
@@ -114,15 +121,16 @@ unsigned int getDimension(FILE *idxFile, unsigned int index) {
 		return 0;
 	}
 
-	return intFlip(dim);
+	return int_flip(dim);
 }
 
 
-void *getSampleAt(FILE *idxFile, unsigned int index) {
-	unsigned int numDims = getNumDimensions(idxFile);
+void *get_sample_at(FILE *idxFile, unsigned int index)
+{
+	unsigned int numDims = get_num_dimensions(idxFile);
 	unsigned int dataTypeSize;
 
-	switch(getDataType(idxFile)) {
+	switch(get_data_type(idxFile)) {
 		case 0x08:
 			dataTypeSize = sizeof(unsigned char);
 			break;
@@ -148,7 +156,7 @@ void *getSampleAt(FILE *idxFile, unsigned int index) {
 
 	unsigned int size_sample = 1;
 	for(int i = 1; i < numDims; i++) {
-		size_sample *= getDimension(idxFile, i);
+		size_sample *= get_dimension(idxFile, i);
 	}
 
 	if(fseek(idxFile, 4 + 4 * numDims + index * size_sample * dataTypeSize, SEEK_SET) != 0) {
@@ -165,12 +173,13 @@ void *getSampleAt(FILE *idxFile, unsigned int index) {
 	return sample;
 }
 
-// getAllSamples dumps all of the data from a file
-void *getAllSamples(FILE *idxFile) {
-	unsigned int numDims = getNumDimensions(idxFile);
+// get_all_samples dumps all of the data from a file
+void *get_all_samples(FILE *idxFile)
+{
+	unsigned int numDims = get_num_dimensions(idxFile);
 	unsigned int dataTypeSize;
 
-	switch(getDataType(idxFile)) {
+	switch(get_data_type(idxFile)) {
 		case 0x08:
 			dataTypeSize = sizeof(unsigned char);
 			break;
@@ -196,7 +205,7 @@ void *getAllSamples(FILE *idxFile) {
 
 	unsigned int size_data = 1;
 	for(int i = 0; i < numDims; i++) {
-		size_data *= getDimension(idxFile, i);
+		size_data *= get_dimension(idxFile, i);
 	}
 
 	// Position at the beginning of the data
